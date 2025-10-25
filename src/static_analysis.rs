@@ -242,7 +242,7 @@ impl<'a> Analysis<'a> {
             self.cfg_nodes.entry(*pc).or_default();
         }
         let mut cfg_edges = BTreeMap::new();
-        for (pc, insn) in self.instructions.iter().enumerate() {
+        for (_pc, insn) in self.instructions.iter().enumerate() {
             let target_pc = (insn.ptr as isize + insn.off as isize + 1) as usize;
             match insn.opc {
                 ebpf::CALL_IMM => {
@@ -262,12 +262,7 @@ impl<'a> Analysis<'a> {
                     }
                 }
                 ebpf::CALL_REG => {
-                    // model "we come back here after the call"
                     self.cfg_nodes.entry(insn.ptr + 1).or_default();
-
-                    // destinations:
-                    // - fallthrough to next instruction
-                    // - plus super_root (if flatten_call_graph == true)
                     let destinations = if flatten_call_graph {
                         vec![insn.ptr + 1, self.super_root]
                     } else {
